@@ -140,14 +140,16 @@ def processor(i, q, q2):
         #winsound.PlaySound(WAV_KNOCK, winsound.SND_ASYNC)
         uid = get_uidnum(r_data)
         docnum = get_siryounum(r_data)
-        print(timestamp + ": " + u"UID-num: " + uid)
-        print(timestamp + ": " + u"siryo-num: " + docnum)
+
+        printmsg = []
+        printmsg.append(timestamp + ": " + u"UID-num: " + uid)
+        printmsg.append(timestamp + ": " + u"siryo-num: " + docnum)
 
         docinfo = get_document(cur, docnum)
         if len(docinfo) == 0:
-            print(timestamp + ": " + u"該当する資料番号なし")
+            printmsg.append(timestamp + ": " + u"該当する資料番号なし")
         else:
-            print("%s: docinfo %s" % (timestamp, docinfo))
+            printmsg.append("%s: docinfo %s" % (timestamp, docinfo))
             #winsound.PlaySound(None, winsound.SND_PURGE)
             winsound.PlaySound(WAV_1UP, winsound.SND_ASYNC)
             cache["uid"] = uid
@@ -156,6 +158,8 @@ def processor(i, q, q2):
             cache["timestamp"] = timestamp
             q2.put(cache)
 
+        print("\n".join(printmsg))
+
         q.task_done()
         
 
@@ -163,7 +167,7 @@ def appender(ser):
     r_data_last = None
     while(True):
         r_data = ser.read_until(b"\r")
-        if r_data[0:2].hex() == '0200' and r_data[-3:].hex() == '03df0d':
+        if r_data[0:2].hex() == '0200' and (r_data[-3:-2].hex() == '03' and r_data[-1:].hex() == '0d'):
             if r_data_last != r_data:
                 print("append: " + r_data.hex())
                 queue_r_data.put(r_data)
